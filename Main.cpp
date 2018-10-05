@@ -470,6 +470,93 @@ void moveStore(int turn, char row, int col,char newRow, int newCol ){
 
 //function definition pieces
 void pieces(){
+	
+	CONSOLE_SCREEN_BUFFER_INFO info;
+	GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &info );		
+	
+	int posX = 24, posY = 5, col = 0, row=0;		//starting positions of pieces on the board
+	for (row = 0; row<8; row++){
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),63);
+		position(6, posY);						
+		printf("%c",row+65);                    //print row names
+		SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );
+		
+		for (col = 0; col<8; col++){		
+			posX = posX + ((col - 1)*11);
+			if (boxes[row][col] == 1){			                          //start printing red pieces(player1) from here
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),12);
+				position(posX-4, posY-2);
+				printf("   ===");
+				position(posX-4, posY-1);
+				printf(" //   \\\\");
+				position(posX-4, posY);
+				printf("||  R  ||");
+				position(posX-4, posY+1);
+				printf(" \\\\   //");
+				position(posX-4, posY+2);
+				printf("   ===");
+				SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );
+			}
+			else if (boxes[row][col] == 2){								//start printing white pieces(player2) from here
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),15);
+				position(posX-4, posY-2);
+				printf("   ===");
+				position(posX-4, posY-1);
+				printf(" //   \\\\");
+				position(posX-4, posY);
+				printf("||  W  ||");
+				position(posX-4, posY+1);
+				printf(" \\\\   //");
+				position(posX-4, posY+2);
+				printf("   ===");
+				SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );
+			}
+			else if (boxes[row][col] == 3){							//start printing red-king pieces(player1) from here
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),9);
+				position(posX-4, posY-2);
+				printf("   ===");
+				position(posX-4, posY-1);
+				printf(" //   \\\\");
+				position(posX-4, posY);
+				printf("|| R K ||");
+				position(posX-4, posY+1);
+				printf(" \\\\   //");
+				position(posX-4, posY+2);
+				printf("   ===");
+				SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );	
+			}
+			else if (boxes[row][col] == 4){							//start printing white-king pieces(player2) from here
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),14);
+				position(posX-4, posY-2);
+				printf("   ===");
+				position(posX-4, posY-1);
+				printf(" //   \\\\");
+				position(posX-4, posY);
+				printf("|| W K ||");
+				position(posX-4, posY+1);
+				printf(" \\\\   //");
+				position(posX-4, posY+2);
+				printf("   ===");
+				SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );
+			}
+			else if(boxes[row][col] == 0){							//start printing empty spaces from here
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),15);
+				position(posX-4, posY-2);
+				printf("         ");
+				position(posX-4, posY-1);
+				printf("         ");
+				position(posX-4, posY);
+				printf("         ");
+				position(posX-4, posY+1);
+				printf("         ");
+				position(posX-4, posY+2);
+				printf("         ");				
+				SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), info.wAttributes );	
+			}
+			posX = 24;									//resetting the horizontal position to first column
+		}
+		posY += 7;										//increasing the vertical position
+	}
 
 }
 
@@ -480,12 +567,184 @@ void playerTurn(int player){
 
 //defining the move down function
 bool moveDown(int type,int row,int col,int newRow,int newCol){
+	/*checking for a valid move*/
+		
+	//false move if new place is not empty
+	if(boxes[newRow][newCol]!=0){
+		return 0;
+	}
 
+	//false move if player piece is not placed at input position 
+	else if(boxes[row][col]==-1 || boxes[row][col]==0 ){					
+		return 0;
+	}
+
+	//valid move if new place is in diagnol 
+	else if ((newRow == row + 1) && (newCol == col - 1 || newCol == col + 1)){	
+		boxes[newRow][newCol] = boxes[row][col];
+		boxes[row][col] = 0;
+		return 1;
+	}
+
+	//checker by player if checks opponent piece in diagnol
+	else if ((newRow == row + 2) && (newCol == col - 2 || newCol == col + 2)){
+			if ((boxes[newRow - 1][newCol - 1] == type-1 || boxes[newRow - 1][newCol - 1] == type-3 || boxes[newRow - 1][newCol - 1] == type+1 || boxes[newRow - 1][newCol - 1] == type+3) && (boxes[newRow - 1][newCol - 1] !=0) && newCol>col){
+				boxes[newRow - 1][newCol - 1] = 0;
+				boxes[newRow][newCol] = boxes[row][col];
+				boxes[row][col] = 0;
+				return 1;
+			}
+			else if ((boxes[newRow - 1][newCol + 1] == type-1 || boxes[newRow - 1][newCol + 1] == type-3 || boxes[newRow - 1][newCol + 1] == type+1 || boxes[newRow - 1][newCol + 1] == type+3) && (boxes[newRow - 1][newCol + 1] !=0) && newCol<col){
+				boxes[newRow - 1][newCol + 1] = 0;
+				boxes[newRow][newCol] = boxes[row][col];
+				boxes[row][col] = 0;
+				return 1;
+			}
+	}
+
+	//double checker by player
+	else if((newRow == row + 4) && (newCol == col - 4 || newCol == col + 4 || newCol==col)){	
+			if(newCol == col + 4){
+					if(((boxes[row+1][col+1]==type-1 || boxes[row+1][col+1]==type+1 ||  boxes[row+1][col+1]==type+3 || boxes[row+1][col+1]==type-3) && boxes[row+1][col+1]!=0) && boxes[row+2][col+2]==0 && ((boxes[row+3][col+3]==type-1 || boxes[row+3][col+3]==type+1 || boxes[row+3][col+3]==type+3 ||  boxes[row+3][col+3]==type-3) && boxes[row+3][col+3]!=0)){
+						boxes[row+1][col+1]   = 0;
+						boxes[row+3][col+3]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else if(newCol == col - 4){
+					if(((boxes[row+1][col-1]==type-1 || boxes[row+1][col-1]==type+1 || boxes[row+1][col-1]==type-3 || boxes[row+1][col-1]==type+3)&&boxes[row+1][col-1]!=0) && boxes[row+2][col-2]==0 && ((boxes[row+3][col-3]==type-1 || boxes[row+3][col-3]==type+1 || boxes[row+3][col-3]==type-3 || boxes[row+3][col-3]==type+3)&&boxes[row+3][col-3]!=0)){
+						boxes[row+1][col-1]   = 0;
+						boxes[row+3][col-3]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else if(newCol == col){
+					if(boxes[row+1][col+1]!=0 && (boxes[row+1][col+1]==type-1 || boxes[row+1][col+1]==type-3 || boxes[row+1][col+1]==type+3 || boxes[row+1][col+1]==type+1) && ((boxes[row+3][col+1]==type-1 || boxes[row+3][col+1]==type-3 ||  boxes[row+3][col+1]==type+3 || boxes[row+3][col+1]==type+1)&&boxes[row+3][col+1]!=0) && boxes[row+2][col+2]==0){
+						boxes[row+1][col+1]   = 0;
+						boxes[row+3][col+1]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else if(boxes[row+1][col-1]!=0 && (boxes[row+1][col-1]==type-1 || boxes[row+1][col-1]==type+3 || boxes[row+1][col-1]==type-3 || boxes[row+1][col-1]==type+1)  && (boxes[row+3][col-1]!=0 && (boxes[row+3][col-1]==type-1 || boxes[row+3][col-1]==type+3 || boxes[row+3][col-1]==type-3 || boxes[row+3][col-1]==type+1) && boxes[row+2][col-2]==0)){
+						boxes[row+1][col-1]   = 0;
+						boxes[row+3][col-1]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else{
+				return 0;
+			}
+	}
+	else{
+		return 0;
+	}
 }
 
 //defining the move up function
 bool moveUp(int type, int row,int col,int newRow,int newCol){
+	/*checking for a valid move*/
+		
+	//false move if new place is not empty
+	if(boxes[newRow][newCol]!=0){
+		return 0;
+	}
 
+	//false move if player piece is not placed at input position
+	else if(boxes[row][col]==-1 || boxes[row][col]==0 ){					
+		return 0;
+	}
+
+	//valid move if new place is in diagnol 
+	else if ((newRow == row - 1) && (newCol == col - 1 || newCol == col + 1)){
+		boxes[newRow][newCol] = boxes[row][col];
+		boxes[row][col] = 0;
+		return 1;
+	}
+
+	//checker by player if checks opponent piece in diagnol
+	else if ((newRow == row - 2) && (newCol == col - 2 || newCol == col + 2)){
+			if (boxes[newRow + 1][newCol - 1] !=0 && (boxes[newRow + 1][newCol - 1] == type-1 || boxes[newRow + 1][newCol - 1] == type-3 || boxes[newRow + 1][newCol - 1] == type+1) && newCol>col){
+				boxes[newRow + 1][newCol - 1] = 0;
+				boxes[newRow][newCol] = boxes[row][col];
+				boxes[row][col] = 0;
+				return 1;
+			}
+			else if (boxes[newRow + 1][newCol + 1] !=0 &&(boxes[newRow + 1][newCol + 1] == type-1 || boxes[newRow + 1][newCol + 1] == type-3 || boxes[newRow + 1][newCol + 1] == type+1) && newCol<col){
+				boxes[newRow + 1][newCol + 1] = 0;
+				boxes[newRow][newCol] = boxes[+row][col];
+				boxes[row][col] = 0;
+				return 1;
+			}
+	}
+
+	//double checker by player
+	else if((newRow == row - 4) && (newCol == col - 4 || newCol == col + 4 || newCol==col)){
+			if(newCol == col + 4){
+					if(boxes[row-1][col+1]!=0 && (boxes[row-1][col+1]==type-1 || boxes[row-1][col+1]==type+1 || boxes[row-1][col+1]==type+3 || boxes[row-1][col+1]==type-3) && boxes[row-2][col+2]==0 && (boxes[row-3][col+3]==type-1 || boxes[row-3][col+3]==type-3 || boxes[row-3][col+3]==type+3 || boxes[row-3][col+3]==type+1)){
+						boxes[row-1][col+1]   = 0;
+						boxes[row-3][col+3]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else if(newCol == col - 4){
+					if(boxes[row-1][col-1]!=0 && (boxes[row-1][col-1]==type-1 || boxes[row-1][col-1]==type+1 || boxes[row-1][col-1]==type+3 || boxes[row-1][col-1]==type-3) && boxes[row-2][col-2]==0 && (boxes[row-3][col-3]==type-1 || boxes[row-3][col-3]==type+3 || boxes[row-3][col-3]==type-3 || boxes[row-3][col-3]==type+1)){
+						boxes[row-1][col-1]   = 0;
+						boxes[row-3][col-3]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else if(newCol == col){
+				if((boxes[row-1][col-1]!=0 && (boxes[row-1][col-1]==type-1 || boxes[row-1][col-1]==type-3 ||boxes[row-1][col-1]==type+3 || boxes[row-1][col-1]==type+1)) && boxes[row-2][col-2]==0 && (boxes[row-3][col-1]==type-1 || boxes[row-3][col-1]==type-3 || boxes[row-3][col-1]==type+3 || boxes[row-3][col-1]==type+1)){
+						boxes[row-1][col-1]   = 0;
+						boxes[row-3][col-1]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+				else if((boxes[row-1][col+1]!=0 && (boxes[row-1][col+1]==type-1 || boxes[row-1][col+1]==type-3 || boxes[row-1][col+1]==type+3 || boxes[row-1][col+1]==type+1)) && (boxes[row-3][col+1]!=0 && (boxes[row-3][col+1]==type-1 || boxes[row-3][col+1]==type+1 || boxes[row-3][col+1]==type-3 ||boxes[row-3][col+1]==type+3) && boxes[row-2][col+2]==0)){
+						boxes[row-1][col+1]   = 0;
+						boxes[row-3][col+1]   = 0;
+						boxes[newRow][newCol] = boxes[row][col];
+						boxes[row][col]		  = 0;
+						return 1;
+					}
+					else{
+						return 0;
+					}
+			}
+			else{
+				return 0;
+			}
+	}
+	else{
+		return 0;
+	}
 }
 
 bool backFor(int type, int row,int col,int newRow,int newCol){
